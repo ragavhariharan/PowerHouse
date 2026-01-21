@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Upload, FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { ExtractedBillData, EnergyProfile } from "@/lib/types";
 
-export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (data: any) => void }) {
+export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (data: { extractedData: ExtractedBillData; profile: EnergyProfile }) => void }) {
     const [isDragging, setIsDragging] = useState(false);
     const [file, setFile] = useState<File | null>(null);
-    const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+    const [status, setStatus] = useState<"idle" | "generating" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
 
     const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -22,7 +23,6 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (d
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
-
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             const droppedFile = e.dataTransfer.files[0];
             if (droppedFile.type === "application/pdf" || droppedFile.type.startsWith("image/")) {
@@ -40,32 +40,50 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (d
         setMessage("");
     };
 
-    const uploadFile = async () => {
-        if (!file) return;
-
-        setStatus("uploading");
-        const formData = new FormData();
-        formData.append("file", file);
-
+    // Generate a lightweight mock analysis locally (frontend-only)
+    const generateMockAnalysis = async (f: File) => {
         try {
-            const response = await fetch("/api/analyze", {
-                method: "POST",
-                body: formData,
-            });
+            setStatus("generating");
+            // Simple deterministic mock based on file size to give variety
+            const sizeKb = Math.max(1, Math.floor((f.size || 1000) / 1024));
+            const consumptionKwh = Math.round(200 + (sizeKb % 300));
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || "Upload failed");
-            }
+            const extractedData: ExtractedBillData = {
+                periodStart: undefined,
+                periodEnd: undefined,
+                totalAmount: Number((consumptionKwh * 0.14).toFixed(2)),
+                consumptionKwh,
+                billingDate: new Date().toLocaleDateString(),
+                provider: "Demo Energy Co.",
+                tariffType: "residential",
+                lineItems: [
+                    { description: "Energy Charges", amount: Number((consumptionKwh * 0.12).toFixed(2)), unit: "$" },
+                    { description: "Delivery & Fees", amount: Number((consumptionKwh * 0.02).toFixed(2)), unit: "$" }
+                ]
+            };
 
-            const data = await response.json();
+            const profile: EnergyProfile = {
+                averageDailyConsumption: Number((consumptionKwh / 30).toFixed(2)),
+                projectedMonthlyCost: Number((consumptionKwh * 0.14).toFixed(2)),
+                carbonFootprintKg: Number((consumptionKwh * 0.45).toFixed(2)),
+                efficiencyScore: Math.max(40, 100 - Math.floor(consumptionKwh / 10)),
+                insights: [
+                    `Detected ${consumptionKwh} kWh for the billing period (mock).`,
+                    `Try shifting heavy appliances to off-peak hours to save ~${(consumptionKwh * 0.05).toFixed(2)} kWh.`
+                ]
+            };
+
+            // Small delay for pleasant UX
+            await new Promise((r) => setTimeout(r, 600));
+
             setStatus("success");
-            setMessage("Analysis complete!");
-            if (onUploadComplete) onUploadComplete(data);
-        } catch (error) {
-            console.error(error);
+            setMessage("Analysis ready — local preview only.");
+
+            if (onUploadComplete) onUploadComplete({ extractedData, profile });
+        } catch (err) {
+            console.error(err);
             setStatus("error");
-            setMessage(error instanceof Error ? error.message : "Failed to process the bill.");
+            setMessage("Failed to generate analysis.");
         }
     };
 
@@ -73,9 +91,9 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (d
         <div className="w-full max-w-xl mx-auto">
             <div
                 className={`glass-panel p-8 transition-all duration-300 border-2 border-dashed
-          ${isDragging ? "border-accent-primary bg-white/5" : "border-glass-border"}
-          ${status === "uploading" ? "opacity-50 pointer-events-none" : ""}
-          flex flex-col items-center justify-center min-h-[300px] text-center`}
+                    ${isDragging ? "border-accent-primary bg-white/5" : "border-glass-border"}
+                    ${status === "generating" ? "opacity-60 pointer-events-none" : ""}
+                    flex flex-col items-center justify-center min-h-[320px] text-center`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -85,10 +103,10 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (d
                         <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center mb-4">
                             <CheckCircle className="w-8 h-8 text-success" />
                         </div>
-                        <h3 className="text-xl font-bold mb-2">Success!</h3>
+                        <h3 className="text-xl font-bold mb-2">Preview Ready</h3>
                         <p className="text-text-secondary">{message}</p>
                         <button
-                            onClick={() => { setFile(null); setStatus("idle"); }}
+                            onClick={() => { setFile(null); setStatus("idle"); setMessage(""); }}
                             className="mt-6 text-sm underline hover:text-white text-text-secondary"
                         >
                             Upload another
@@ -97,18 +115,19 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (d
                 ) : (
                     <>
                         <div className={`w-20 h-20 rounded-full bg-accent-primary/10 flex items-center justify-center mb-6 transition-transform duration-300 ${isDragging ? "scale-110" : ""}`}>
-                            {status === "uploading" ? (
-                                <Loader2 className="w-10 h-10 text-accent-primary animate-spin" />
-                            ) : (
-                                <Upload className="w-10 h-10 text-accent-primary" />
-                            )}
+                            <Upload className="w-10 h-10 text-accent-primary" />
                         </div>
 
                         {file ? (
                             <div className="flex flex-col items-center">
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 mb-6 border border-glass-border">
-                                    <FileText className="w-6 h-6 text-accent-secondary" />
-                                    <span className="text-sm font-medium">{file.name}</span>
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 mb-6 border border-glass-border w-full justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <FileText className="w-6 h-6 text-accent-secondary" />
+                                        <div className="text-left">
+                                            <div className="text-sm font-medium">{file.name}</div>
+                                            <div className="text-xs text-text-secondary">{(file.size / 1024).toFixed(0)} KB • {file.type || 'file'}</div>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={() => setFile(null)}
                                         className="ml-2 text-text-secondary hover:text-error"
@@ -117,21 +136,19 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete?: (d
                                     </button>
                                 </div>
 
-                                <button
-                                    onClick={uploadFile}
-                                    className="button-primary w-full min-w-[200px]"
-                                >
-                                    {status === "uploading" ? "Analyzing..." : "Analyze Bill"}
-                                </button>
+                                <div className="grid grid-cols-1 gap-3 w-full">
+                                    <button
+                                        onClick={() => file && generateMockAnalysis(file)}
+                                        className="button-primary w-full min-w-[200px]"
+                                    >
+                                        {status === "generating" ? "Generating…" : "Generate Preview"}
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <>
-                                <h3 className="text-xl font-bold mb-2">
-                                    Drop your electricity bill here
-                                </h3>
-                                <p className="text-text-secondary mb-6 max-w-xs mx-auto">
-                                    Support for PDF and Image files. We'll extract usage data automatically.
-                                </p>
+                                <h3 className="text-xl font-bold mb-2">Drop your electricity bill here</h3>
+                                <p className="text-text-secondary mb-6 max-w-xs mx-auto">Support for PDF and Image files. This is a frontend-only preview — no uploads.</p>
                                 <label className="button-primary cursor-pointer relative overflow-hidden">
                                     <span>Browse Files</span>
                                     <input

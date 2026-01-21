@@ -1,0 +1,21 @@
+{
+  "name": "powerhouse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rakshithshakkthi/Powerhouse.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rakshithshakkthi/Powerhouse/issues"
+  },
+  "homepage": "https://github.com/rakshithshakkthi/Powerhouse#readme"
+}

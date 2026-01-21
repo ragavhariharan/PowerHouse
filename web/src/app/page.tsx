@@ -24,7 +24,7 @@ export default function Home() {
             <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               Turn your electricity bills into actionable intelligence.
               <br />
-              Upload a PDF to get started with deterministic analysis and AI insights.
+              This preview runs fully in your browser—no uploads, no OCR.
             </p>
           </div>
         )}

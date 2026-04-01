@@ -71,12 +71,12 @@ function updateMoMInsights(billsArray) {
     } else {
         
         if (percent > 0) {
-            momValue.innerText = `⬆️ ${Math.abs(percent).toFixed(1)}%`;
+            momValue.innerText = `↑ ${Math.abs(percent).toFixed(1)}%`;
             momValue.style.color = "var(--color-penalty)";
             momText.innerText = `Higher than last cycle`;
             momText.className = "stat-trend negative";
         } else if (percent < 0) {
-            momValue.innerText = `⬇️ ${Math.abs(percent).toFixed(1)}%`;
+            momValue.innerText = `↓ ${Math.abs(percent).toFixed(1)}%`;
             momValue.style.color = "var(--color-safe)";
             momText.innerText = `Lower than last cycle`;
             momText.className = "stat-trend positive";
@@ -139,9 +139,9 @@ function calculateTrend(bills) {
     }
     
     const change = comparisons > 0 ? totalChangePct / comparisons : 0;
-    if(change > 5) return { indicator: "📈", text: "Increasing", changePct: change };
-    if(change < -5) return { indicator: "📉", text: "Decreasing", changePct: change };
-    return { indicator: "➖", text: "Stable", changePct: change };
+    if(change > 5) return { indicator: "↑", text: "Increasing", changePct: change };
+    if(change < -5) return { indicator: "↓", text: "Decreasing", changePct: change };
+    return { indicator: "→", text: "Stable", changePct: change };
 }
 
 function calculateMoMCost(bills) {
@@ -166,11 +166,11 @@ function generateInsights(bills) {
     const trend = calculateTrend(bills);
 
     let html = "";
-    if(max) html += `<div class="insight-item">🔥 <span>Your highest usage was in <strong>${max.month}</strong> (${max.units} units).</span></div>`;
-    if(min) html += `<div class="insight-item">❄️ <span>Your lowest usage was in <strong>${min.month}</strong> (${min.units} units).</span></div>`;
-    if(penalty > 0) html += `<div class="insight-item" style="border-left: 3px solid var(--color-penalty);">⚠️ <span>You crossed the penalty slab <strong>${penalty} times</strong>.</span></div>`;
-    if(trend.changePct < -5) html += `<div class="insight-item" style="border-left: 3px solid var(--color-safe);">📉 <span>Your usage decreased by <strong>${Math.abs(trend.changePct).toFixed(1)}%</strong> last cycle. Great job!</span></div>`;
-    else if(trend.changePct > 5) html += `<div class="insight-item" style="border-left: 3px solid var(--color-warning);">📈 <span>Your usage increased by <strong>${Math.abs(trend.changePct).toFixed(1)}%</strong> last cycle.</span></div>`;
+    if(max) html += `<div class="insight-item"><span>Your highest usage was in <strong>${max.month}</strong> (${max.units} units).</span></div>`;
+    if(min) html += `<div class="insight-item"><span>Your lowest usage was in <strong>${min.month}</strong> (${min.units} units).</span></div>`;
+    if(penalty > 0) html += `<div class="insight-item" style="border-left: 3px solid var(--color-penalty);"><span>You crossed the penalty slab <strong>${penalty} times</strong>.</span></div>`;
+    if(trend.changePct < -5) html += `<div class="insight-item" style="border-left: 3px solid var(--color-safe);"><span>Your usage decreased by <strong>${Math.abs(trend.changePct).toFixed(1)}%</strong> last cycle. Great job!</span></div>`;
+    else if(trend.changePct > 5) html += `<div class="insight-item" style="border-left: 3px solid var(--color-warning);"><span>Your usage increased by <strong>${Math.abs(trend.changePct).toFixed(1)}%</strong> last cycle.</span></div>`;
 
     list.innerHTML = html;
 }

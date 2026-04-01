@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bills - PowerHouse</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+
+    <nav class="sidebar">
+        <div class="sidebar-brand"><a href="dashboard.html" style="text-decoration: none; color: inherit;"><span class="text-green">Power</span>House</a></div>
+        <ul class="sidebar-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="bills.html" class="active">My Bills</a></li>
+            <li><a href="appliances.html">Appliances</a></li>
+            
+        </ul>
+        <div class="sidebar-footer">
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="dashboard-header">
+            <h2>Bill Ledger</h2>
+            <p style="color: #666; margin-top: 5px;">A complete history of your logged consumption.</p>
+        </header>
+
+        <div class="chart-container" style="height: auto; padding: 0;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead style="background-color: #f9f9f9; border-bottom: 2px solid #eee;">
+                    <tr>
+                        <th style="padding: 1.5rem;">Billing Month</th>
+                        <th style="padding: 1.5rem;">Units Consumed</th>
+                        <th style="padding: 1.5rem;">Total Cost</th>
+                        <th style="padding: 1.5rem;">TNEB Status</th>
+                        <th style="padding: 1.5rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="billsTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

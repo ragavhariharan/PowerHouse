@@ -14,9 +14,8 @@
         <div class="sidebar-brand"><span class="text-green">Power</span>House</div>
         <ul class="sidebar-links">
             <li><a href="#" class="active">Dashboard</a></li>
-            <li><a href="#">My Bills</a></li>
+            <li><a href="bills.html">My Bills</a></li>
             <li><a href="appliances.html">Appliances</a></li>
-            <li><a href="#">Settings</a></li>
         </ul>
         <div class="sidebar-footer">
             <a href="index.html">Logout</a>
@@ -25,8 +24,20 @@
 
     <main class="main-content">
         <header class="dashboard-header">
-            <h2>Overview</h2>
-            <button class="btn-primary">+ Add New Bill</button>
+            <div>
+                <h2>Overview</h2>
+                <button class="btn-primary" style="margin-top: 15px;">+ Add New Bill</button>
+            </div>
+            
+            <!-- Compact Slab Predictor Widget -->
+            <div class="predictor-widget">
+                <div class="predictor-label">Calculate Future Bill (What-If)</div>
+                <div class="predictor-input-group">
+                    <input type="number" id="targetUnits" placeholder="e.g. 480" class="predictor-input">
+                    <button id="predictBillBtn" class="btn-primary predictor-btn">Predict</button>
+                </div>
+                <div id="predictResultContainer" class="d-none"></div>
+            </div>
         </header>
 
         <div class="stats-grid">
@@ -73,6 +84,7 @@
         </form>
     </div>
 </div>
+
     <script src="script.js"></script>
 </body>
 </html>

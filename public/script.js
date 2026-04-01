@@ -1,10 +1,54 @@
 let usageChart;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    
     // --- 0. SECURITY CHECK (THE BOUNCER) ---
     const currentUserId = localStorage.getItem('powerhouse_userId');
     const isDashboard = window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('appliances.html');
+    // --- MY BILLS LEDGER LOGIC ---
+    const billsTableBody = document.getElementById('billsTableBody');
+    if (billsTableBody) {
+        try {
+            const response = await fetch('/api/bills/' + currentUserId);
+            const billsData = await response.json();
+
+            if (billsData.length === 0) {
+                billsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #999;">No bills logged yet. Head to the Dashboard to add one.</td></tr>`;
+            } else {
+                // Reverse the array so the newest bills are at the top
+                billsData.reverse().forEach(bill => {
+                    const statusText = bill.units > 500 ? '<span style="color: #e74c3c; font-weight: 600;">Penalty Slab</span>' : '<span style="color: #2ecc71; font-weight: 600;">Safe Slab</span>';
+                    
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = "1px solid #eee";
+                    row.innerHTML = `
+                        <td style="padding: 1.5rem;">${bill.month}</td>
+                        <td style="padding: 1.5rem;">${bill.units} kWh</td>
+                        <td style="padding: 1.5rem;">₹${bill.cost}</td>
+                        <td style="padding: 1.5rem;">${statusText}</td>
+                        <td style="padding: 1.5rem;">
+                            <button class="delete-bill-btn" data-id="${bill._id}" style="color: #e74c3c; background: none; border: none; cursor: pointer; font-weight: 600;">Delete</button>
+                        </td>
+                    `;
+                    billsTableBody.appendChild(row);
+                });
+
+                // Attach event listeners to all the new delete buttons
+                document.querySelectorAll('.delete-bill-btn').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        const billId = this.getAttribute('data-id');
+                        if(confirm("Are you sure you want to delete this bill? This will update your dashboard chart.")) {
+                            await fetch('/api/bills/' + billId, { method: 'DELETE' });
+                            window.location.reload(); // Refresh to show updated table
+                        }
+                    });
+                });
+            }
+        } catch (error) {
+            console.error("Error loading bills ledger:", error);
+        }
+    }
+
+    
 
     // If they are trying to view the private pages without a VIP pass, kick them out
     if (isDashboard && !currentUserId) {
@@ -49,8 +93,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                     datasets: [{
                         label: 'Bi-monthly Cost (₹)',
                         data: costArray,
-                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                        borderColor: '#58a6ff',
                         borderWidth: 2,
                         tension: 0.3,
                         fill: true
@@ -65,8 +109,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
-                            x: { grid: { display: false } }
+                            y: { 
+                                beginAtZero: true, 
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: { 
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8b949e' }
+                            }
                         }
                     }
                 });
@@ -149,8 +200,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                     usageChart.data.datasets[0].data = freshBills.map(b => b.cost);
                     
                     usageChart.data.datasets[0].label = 'Bi-monthly Cost (₹)';
-                    usageChart.data.datasets[0].backgroundColor = 'rgba(46, 204, 113, 0.2)';
-                    usageChart.data.datasets[0].borderColor = '#2ecc71';
+                    usageChart.data.datasets[0].backgroundColor = 'rgba(88, 166, 255, 0.1)';
+                    usageChart.data.datasets[0].borderColor = '#58a6ff';
                     usageChart.data.datasets[0].borderWidth = 2;
                     usageChart.data.datasets[0].fill = true;
                     
@@ -188,6 +239,54 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
+    // --- SERVER-SIDE SLAB PREDICTOR (WHAT-IF) LOGIC ---
+    const targetUnitsInput = document.getElementById('targetUnits');
+    const predictBillBtn = document.getElementById('predictBillBtn');
+    const predictResultContainer = document.getElementById('predictResultContainer');
+
+    if (predictBillBtn) {
+        predictBillBtn.addEventListener('click', async () => {
+            const expectedUnits = parseFloat(targetUnitsInput.value);
+
+            if (isNaN(expectedUnits) || expectedUnits < 0) {
+                alert("Please enter a valid positive number for units.");
+                return;
+            }
+
+            try {
+                // Send calculation request to the new Backend Endpoint
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ expectedUnits })
+                });
+
+                if (!response.ok) throw new Error("Prediction request failed");
+
+                const result = await response.json();
+                
+                predictResultContainer.classList.remove('d-none');
+                
+                const isSafe = result.status === "Safe Slab";
+                const color = isSafe ? "#2ecc71" : "#e74c3c";
+                const icon = isSafe ? "✅" : "⚠️";
+                const message = isSafe 
+                    ? `You are under the 500 unit limit. You have <b>${result.difference.toFixed(0)}</b> buffer units left.`
+                    : `You have triggered the Penalty Rates! You are <b>${result.difference.toFixed(0)}</b> units over the limit.`;
+
+                const cssColor = isSafe ? "var(--color-safe)" : "var(--color-penalty)";
+                predictResultContainer.className = "predictor-result-box";
+                predictResultContainer.innerHTML = `
+                    <h4 style="color: ${cssColor}">${icon} ${result.status}</h4>
+                    <p>Cost: <b>₹${result.cost.toFixed(2)}</b></p>
+                    <p class="msg">${message}</p>
+                `;
+            } catch (error) {
+                console.error("Prediction Error:", error);
+                alert("Failed to calculate prediction over the server.");
+            }
+        });
+    }
     // --- TNEB SIMULATOR LOGIC ---
     const applianceForm = document.getElementById('applianceForm');
     const applianceList = document.getElementById('applianceList');
@@ -290,6 +389,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             updateSimulation();
         });
     }
+
+    
 
     // --- AUTHENTICATION LOGIC ---
     const authForm = document.getElementById('authForm');

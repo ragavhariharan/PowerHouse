@@ -89,7 +89,7 @@ app.post('/api/login', async (req, res) => {
 // GET bills for user
 app.get('/api/bills/:userId', async (req, res) => {
     try {
-        const userBills = await Bill.find({ userId: req.params.userId }).sort({ createdAt: 1 });
+        const userBills = await Bill.find({ userId: req.params.userId }).sort({ createdAt: -1 });
         res.json(userBills);
     } catch (error) {
         res.status(500).json({ message: "Error fetching data" });
@@ -106,14 +106,58 @@ app.delete('/api/bills/:id', async (req, res) => {
     }
 });
 
+// Function to compute TNEB Slab Costs dynamically
+function calculateTNEBCost(units) {
+    let cost = 0;
+    const isSafe = units <= 500;
+    
+    if (units <= 500) {
+        if (units > 100) {
+            const slab101to400 = Math.min(units - 100, 300);
+            cost += slab101to400 * 2.25;
+        }
+        if (units > 400) {
+            const slab401to500 = units - 400;
+            cost += slab401to500 * 4.50;
+        }
+    } else {
+        if (units > 100) {
+            const slab101to400 = Math.min(units - 100, 300);
+            cost += slab101to400 * 4.50; 
+        }
+        if (units > 400) {
+            const slab401to500 = Math.min(units - 400, 100);
+            cost += slab401to500 * 6.00; 
+        }
+        if (units > 500) {
+            const slab501plus = units - 500;
+            cost += slab501plus * 8.00; 
+        }
+    }
+
+    return {
+        cost: cost,
+        isSafe: isSafe,
+        difference: isSafe ? (500 - units) : (units - 500)
+    };
+}
+
 // POST new bill
 app.post('/api/bills', async (req, res) => {
     try {
+        const { userId, month, units } = req.body;
+        
+        if (typeof units !== 'number' || units < 0) {
+            return res.status(400).json({ message: "Invalid consumed units" });
+        }
+
+        const calculated = calculateTNEBCost(units);
+
         const newBill = new Bill({
-            userId: req.body.userId,
-            month: req.body.month,
-            cost: req.body.cost,
-            units: req.body.units
+            userId: userId,
+            month: month,
+            cost: calculated.cost,
+            units: units
         });
         
         await newBill.save(); 
@@ -132,39 +176,12 @@ app.post('/api/predict', (req, res) => {
             return res.status(400).json({ message: "Invalid expected units" });
         }
 
-        let cost = 0;
-        const isSafe = expectedUnits <= 500;
-        
-        if (expectedUnits <= 500) {
-            if (expectedUnits > 100) {
-                const slab101to400 = Math.min(expectedUnits - 100, 300);
-                cost += slab101to400 * 2.25;
-            }
-            if (expectedUnits > 400) {
-                const slab401to500 = expectedUnits - 400;
-                cost += slab401to500 * 4.50;
-            }
-        } else {
-            if (expectedUnits > 100) {
-                const slab101to400 = Math.min(expectedUnits - 100, 300);
-                cost += slab101to400 * 4.50; 
-            }
-            if (expectedUnits > 400) {
-                const slab401to500 = Math.min(expectedUnits - 400, 100);
-                cost += slab401to500 * 6.00; 
-            }
-            if (expectedUnits > 500) {
-                const slab501plus = expectedUnits - 500;
-                cost += slab501plus * 8.00; 
-            }
-        }
-
-        const bufferOrExcess = isSafe ? (500 - expectedUnits) : (expectedUnits - 500);
+        const calculated = calculateTNEBCost(expectedUnits);
 
         res.json({
-            cost: cost,
-            status: isSafe ? "Safe Slab" : "Penalty Slab",
-            difference: bufferOrExcess
+            cost: calculated.cost,
+            status: calculated.isSafe ? "Safe Slab" : "Penalty Slab",
+            difference: calculated.difference
         });
 
     } catch (error) {

@@ -1,9 +1,111 @@
 let usageChart;
+let globalBillsCache = [];
+
+function updateBudgetUI(billsArray) {
+    if(billsArray) globalBillsCache = billsArray;
+    
+    const progressContainer = document.getElementById('budgetProgressBar');
+    const progressText = document.getElementById('budgetProgressText');
+    const budgetInput = document.getElementById('budgetInput');
+    
+    if (!progressContainer || !progressText || !budgetInput) return;
+
+    let storedBudget = localStorage.getItem('powerhouse_budget');
+    if (storedBudget) {
+        budgetInput.value = storedBudget;
+    }
+
+    if (!storedBudget || isNaN(storedBudget) || Number(storedBudget) <= 0) {
+        progressContainer.style.width = '0%';
+        progressText.innerText = "Set your budget to enable tracking";
+        progressText.style.color = "var(--text-secondary)";
+        return;
+    }
+
+    const budgetLimit = Number(storedBudget);
+
+    if (!globalBillsCache || globalBillsCache.length === 0) {
+        progressContainer.style.width = '0%';
+        progressText.innerText = `₹ 0 / ₹ ${budgetLimit} (0%)`;
+        progressText.style.color = "var(--text-secondary)";
+        return;
+    }
+
+    const currentCost = globalBillsCache[0].cost;
+    const progress = (currentCost / budgetLimit) * 100;
+    
+    progressContainer.style.width = `${Math.min(progress, 100)}%`;
+    progressText.innerText = `₹ ${currentCost} / ₹ ${budgetLimit} (${Math.round(progress)}%)`;
+    
+    if (progress > 100) {
+        progressContainer.style.backgroundColor = 'var(--color-penalty)'; 
+        progressText.style.color = 'var(--color-penalty)';
+    } else {
+        progressContainer.style.backgroundColor = 'var(--color-accent)'; 
+        progressText.style.color = 'var(--text-primary)';
+    }
+}
+
+function updateMoMInsights(billsArray) {
+    const momValue = document.getElementById('displayMomValue');
+    const momText = document.getElementById('displayMomText');
+    if (!momValue || !momText) return;
+
+    if (!billsArray || billsArray.length < 2) {
+        momValue.innerText = "-";
+        momText.innerText = "No comparison data yet";
+        momText.className = "stat-trend neutral";
+        momValue.style.color = "var(--text-primary)";
+        return;
+    }
+
+    const latest = billsArray[0].cost;
+    const previous = billsArray[1].cost;
+
+    if (previous === 0) {
+        momValue.innerText = "N/A";
+        momText.innerText = "Previous bill was zero";
+        momText.className = "stat-trend neutral";
+    } else {
+        const diff = latest - previous;
+        const percent = (diff / previous) * 100;
+        
+        if (percent > 0) {
+            momValue.innerText = `⬆️ ${Math.abs(percent).toFixed(1)}%`;
+            momValue.style.color = "var(--color-penalty)";
+            momText.innerText = `Higher than last cycle`;
+            momText.className = "stat-trend negative";
+        } else if (percent < 0) {
+            momValue.innerText = `⬇️ ${Math.abs(percent).toFixed(1)}%`;
+            momValue.style.color = "var(--color-safe)";
+            momText.innerText = `Lower than last cycle`;
+            momText.className = "stat-trend positive";
+        } else {
+            momValue.innerText = `0%`;
+            momValue.style.color = "var(--text-secondary)";
+            momText.innerText = `Same as last cycle`;
+            momText.className = "stat-trend neutral";
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async function() {
     // --- 0. SECURITY CHECK (THE BOUNCER) ---
     const currentUserId = localStorage.getItem('powerhouse_userId');
     const isDashboard = window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('appliances.html');
+
+    // --- BUDGET EVENT LISTENER ---
+    const saveBudgetBtn = document.getElementById('saveBudgetBtn');
+    if (saveBudgetBtn) {
+        saveBudgetBtn.addEventListener('click', () => {
+            const budgetInput = document.getElementById('budgetInput');
+            if (budgetInput.value && Number(budgetInput.value) > 0) {
+                localStorage.setItem('powerhouse_budget', budgetInput.value);
+                updateBudgetUI();
+            }
+        });
+    }
+
     // --- MY BILLS LEDGER LOGIC ---
     const billsTableBody = document.getElementById('billsTableBody');
     if (billsTableBody) {
@@ -84,8 +186,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 });
             } else {
                 // We have data! Extract arrays for the chart
-                const labelsArray = billsData.map(bill => bill.month);
-                const costArray = billsData.map(bill => bill.cost);
+                const labelsArray = billsData.map(bill => bill.month).reverse();
+                const costArray = billsData.map(bill => bill.cost).reverse();
 
                 // Build the real chart
                 const chartData = {
@@ -123,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 });
 
                 // --- Update the Top Stat Cards ---
-                const latestBill = billsData[billsData.length - 1];
+                const latestBill = billsData[0];
                 
                 document.getElementById('displayCost').innerText = `₹ ${latestBill.cost}`;
                 document.getElementById('displayCycle').innerText = `Cycle ending in ${latestBill.month}`;
@@ -144,6 +246,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                     statusTrend.innerText = `Exceeded 500 units by ${latestBill.units - 500}`;
                     statusTrend.className = "stat-trend negative";
                 }
+                
+                updateMoMInsights(billsData);
+                updateBudgetUI(billsData);
             }
         } catch (error) {
             console.error("Error loading chart data:", error);
@@ -168,16 +273,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             try {
                 const monthInput = document.getElementById('billMonth');
                 const unitsInput = document.getElementById('billUnits');
-                const costInput = document.getElementById('billCost');
 
                 const dateObj = new Date(monthInput.value);
                 const monthName = dateObj.toLocaleString('default', { month: 'long' });
                 
-                // 3. Create the data package WITH the User ID attached
+                // 3. Create the data package WITH the User ID attached (Cost is derived in backend)
                 const newBillData = {
                     userId: currentUserId, 
                     month: monthName,
-                    cost: Number(costInput.value),
                     units: Number(unitsInput.value)
                 };
 
@@ -196,8 +299,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const freshBills = await freshResponse.json();
 
                 if (usageChart) {
-                    usageChart.data.labels = freshBills.map(b => b.month);
-                    usageChart.data.datasets[0].data = freshBills.map(b => b.cost);
+                    usageChart.data.labels = freshBills.map(b => b.month).reverse();
+                    usageChart.data.datasets[0].data = freshBills.map(b => b.cost).reverse();
                     
                     usageChart.data.datasets[0].label = 'Bi-monthly Cost (₹)';
                     usageChart.data.datasets[0].backgroundColor = 'rgba(88, 166, 255, 0.1)';
@@ -209,14 +312,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
 
                 // 6. Update the stat cards visually
-                document.getElementById('displayCost').innerText = `₹ ${newBillData.cost}`;
-                document.getElementById('displayCycle').innerText = `Cycle ending in ${newBillData.month}`;
-                document.getElementById('displayUnits').innerText = `${newBillData.units} kWh`;
+                const latestBill = freshBills[0];
+                document.getElementById('displayCost').innerText = `₹ ${latestBill.cost}`;
+                document.getElementById('displayCycle').innerText = `Cycle ending in ${latestBill.month}`;
+                document.getElementById('displayUnits').innerText = `${latestBill.units} kWh`;
                 
                 // 7. Live update the TNEB status card
                 const statusCard = document.getElementById('displayStatus');
                 const statusTrend = document.getElementById('displayStatusTrend');
-                if (newBillData.units <= 500) {
+                if (latestBill.units <= 500) {
                     statusCard.innerText = "Safe Slab";
                     statusCard.style.color = "#2ecc71";
                     statusTrend.innerText = `${500 - newBillData.units} units left before penalty`;
@@ -227,6 +331,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                     statusTrend.innerText = `Exceeded 500 units by ${newBillData.units - 500}`;
                     statusTrend.className = "stat-trend negative";
                 }
+
+                updateMoMInsights(freshBills);
+                updateBudgetUI(freshBills);
 
                 // 8. Close the modal
                 addBillForm.reset();

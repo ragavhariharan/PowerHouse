@@ -23,9 +23,12 @@
     </nav>
 
     <main class="main-content">
-        <header class="dashboard-header">
-            <h2>Bill Ledger</h2>
-            <p style="color: #666; margin-top: 5px;">A complete history of your logged consumption.</p>
+        <header class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2>Bill Ledger</h2>
+                <p style="color: #666; margin-top: 5px;">A complete history of your logged consumption.</p>
+            </div>
+            <button id="exportCsvBtn" class="btn-primary" style="padding: 10px 20px;">Download CSV</button>
         </header>
 
         <div class="chart-container" style="height: auto; padding: 0;">

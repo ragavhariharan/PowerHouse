@@ -40,6 +40,9 @@ function updateBudgetUI(billsArray) {
     if (progress > 100) {
         progressContainer.style.backgroundColor = 'var(--color-penalty)'; 
         progressText.style.color = 'var(--color-penalty)';
+    } else if (progress > 80) {
+        progressContainer.style.backgroundColor = '#d29922';
+        progressText.style.color = '#d29922';
     } else {
         progressContainer.style.backgroundColor = 'var(--color-accent)'; 
         progressText.style.color = 'var(--text-primary)';
@@ -96,12 +99,25 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // --- BUDGET EVENT LISTENER ---
     const saveBudgetBtn = document.getElementById('saveBudgetBtn');
+    const editBudgetBtn = document.getElementById('editBudgetBtn');
+    const budgetEditState = document.getElementById('budgetEditState');
+    const budgetDisplayState = document.getElementById('budgetDisplayState');
+
+    if (editBudgetBtn) {
+        editBudgetBtn.addEventListener('click', () => {
+            budgetEditState.classList.remove('d-none');
+            budgetDisplayState.classList.add('d-none');
+        });
+    }
+
     if (saveBudgetBtn) {
         saveBudgetBtn.addEventListener('click', () => {
             const budgetInput = document.getElementById('budgetInput');
             if (budgetInput.value && Number(budgetInput.value) > 0) {
                 localStorage.setItem('powerhouse_budget', budgetInput.value);
                 updateBudgetUI();
+                budgetEditState.classList.add('d-none');
+                budgetDisplayState.classList.remove('d-none');
             }
         });
     }
@@ -148,6 +164,44 @@ document.addEventListener('DOMContentLoaded', async function() {
         } catch (error) {
             console.error("Error loading bills ledger:", error);
         }
+    }
+
+    // --- CSV EXPORT LOGIC ---
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/bills/' + currentUserId);
+                const exportBills = await response.json();
+
+                if (!exportBills || exportBills.length === 0) {
+                    alert('No data to export');
+                    return;
+                }
+
+                // Compile CSV Headers
+                let csvContent = "Month,Units,Cost\n";
+                
+                exportBills.forEach(bill => {
+                    csvContent += `"${bill.month}",${bill.units},${bill.cost}\n`;
+                });
+
+                // Generate and trigger Virtual Blob File
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'powerhouse_bills.csv';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error("Error generating CSV:", error);
+                alert("Failed to export data.");
+            }
+        });
     }
 
     

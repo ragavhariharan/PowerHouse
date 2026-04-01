@@ -61,21 +61,29 @@
                 <p class="stat-number" id="displayMomValue" style="font-size: 1.5rem;">-</p>
                 <span class="stat-trend neutral" id="displayMomText">No comparison data yet</span>
             </div>
-        </div>
-
-        <div class="chart-container" style="margin-bottom: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3>Bi-monthly Budget Tracking</h3>
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" id="budgetInput" placeholder="Limit (₹)" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); width: 120px;">
-                    <button id="saveBudgetBtn" class="btn-primary" style="padding: 8px 15px; border-radius: 4px;">Save</button>
+            <div class="stat-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+                    <h3 style="margin: 0; line-height: 1.2;">Budget Tracker</h3>
+                    <button id="editBudgetBtn" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); filter: grayscale(1); font-size: 0.9rem;" title="Edit Budget">✏️</button>
+                </div>
+                
+                <div id="budgetDisplayState">
+                    <p class="stat-number" id="budgetProgressText" style="font-size: 1.3rem; margin-top: 5px;">-</p>
+                    <div class="progress-bar-container" style="height: 6px; margin-top: 10px; margin-bottom: 5px;">
+                        <div id="budgetProgressBar" class="progress-bar"></div>
+                    </div>
+                    <span class="stat-trend neutral" id="budgetStatusText">Set a budget</span>
+                </div>
+                
+                <div id="budgetEditState" class="d-none" style="margin-top: 10px;">
+                    <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                        <input type="number" id="budgetInput" placeholder="Max ₹" style="flex: 1; padding: 5px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); font-size: 0.9rem;">
+                        <button id="saveBudgetBtn" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; border-radius: 4px;">Save</button>
+                    </div>
                 </div>
             </div>
-            <div class="progress-bar-container">
-                <div id="budgetProgressBar" class="progress-bar"></div>
-            </div>
-            <p id="budgetProgressText" style="text-align: right; margin-top: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);">Set your budget to enable tracking</p>
         </div>
+
 
         <div class="chart-container">
             <h3>Consumption History</h3>

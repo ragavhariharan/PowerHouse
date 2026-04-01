@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - PowerHouse</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-body">
+
+    <nav class="sidebar">
+        <div class="sidebar-brand"><span class="text-green">Power</span>House</div>
+        <ul class="sidebar-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="bills.html">My Bills</a></li>
+            <li><a href="appliances.html">Appliances</a></li>
+            <li><a href="analytics.html" class="active">📊 Analytics</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="index.html">Logout</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="dashboard-header">
+            <div>
+                <h2>Analytics</h2>
+                <p style="color: #666; margin-top: 5px;">Deep insights into your energy usage</p>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem; font-weight: 600;">Historical Summary</h3>
+        <div class="stats-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card">
+                <h3>Avg Units / Cycle</h3>
+                <p class="stat-number" id="analyticsAvgUnits">0 kWh</p>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Cost</h3>
+                <p class="stat-number" id="analyticsAvgCost">₹ 0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Highest Usage</h3>
+                <p class="stat-number" style="font-size: 1.25rem; line-height: 1.5;" id="analyticsPeakUsage">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Lowest Usage</h3>
+                <p class="stat-number" style="font-size: 1.25rem; line-height: 1.5;" id="analyticsFloorUsage">-</p>
+            </div>
+        </div>
+
+        <!-- Main Chart -->
+        <div class="chart-container" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Consumption vs Cost Curve</h3>
+            </div>
+            <canvas id="analyticsDualChart" style="max-height: 350px;"></canvas>
+        </div>
+
+        <div class="analytics-split">
+            <!-- Predictive Insights -->
+            <div class="chart-container">
+                <h3>Dynamic Insights</h3>
+                <div id="analyticsInsightsList" class="insights-list">
+                    <!-- JS fills this -->
+                    <span style="color: #999;">Loading insights...</span>
+                </div>
+            </div>
+
+            <!-- Advanced Metrics -->
+            <div class="chart-container">
+                <h3>Advanced Metrics</h3>
+                <div class="advanced-stats">
+                    <div class="stat-card" style="padding: 1rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Total Units</span>
+                        <p id="analyticsTotalUnits" style="font-size: 1.2rem; font-weight: 600; margin-top: 5px; color: var(--text-primary);">0 kWh</p>
+                    </div>
+                    <div class="stat-card" style="padding: 1rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Total Spent</span>
+                        <p id="analyticsTotalSpent" style="font-size: 1.2rem; font-weight: 600; margin-top: 5px; color: var(--text-primary);">₹ 0</p>
+                    </div>
+                    <div class="stat-card" style="padding: 1rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Avg % Change</span>
+                        <p id="analyticsAvgChange" style="font-size: 1.2rem; font-weight: 600; margin-top: 5px; color: var(--text-primary);">0%</p>
+                    </div>
+                    <div class="stat-card" style="padding: 1rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Penalty Hits</span>
+                        <p id="analyticsPenaltyHits" style="font-size: 1.2rem; font-weight: 600; margin-top: 5px; color: var(--text-primary);">0</p>
+                    </div>
+                    <div class="stat-card" style="padding: 1rem; grid-column: span 2; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Current Trend</span>
+                        <p id="analyticsTrendVal" style="font-size: 1.4rem; font-weight: 600; margin: 0; color: var(--text-primary);">➖ Stable</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

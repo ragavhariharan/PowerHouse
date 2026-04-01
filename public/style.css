@@ -491,3 +491,41 @@ tr:last-child td { border-bottom: none; }
     width: 0%;
     transition: width 0.5s ease-out, background-color 0.3s ease;
 }
+
+/* Analytics Structure */
+.analytics-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.advanced-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 15px;
+}
+
+.insights-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 15px;
+}
+
+.insight-item {
+    background: var(--bg-elevated);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .analytics-split {
+        grid-template-columns: 1fr;
+    }
+}

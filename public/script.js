@@ -62,16 +62,13 @@ function updateMoMInsights(billsArray) {
         return;
     }
 
-    const latest = billsArray[0].cost;
-    const previous = billsArray[1].cost;
+    const percent = calculateMoMCost(billsArray);
 
-    if (previous === 0) {
+    if (percent === null) {
         momValue.innerText = "N/A";
-        momText.innerText = "Previous bill was zero";
+        momText.innerText = billsArray[1].cost === 0 ? "Previous bill was zero" : "Not enough data";
         momText.className = "stat-trend neutral";
     } else {
-        const diff = latest - previous;
-        const percent = (diff / previous) * 100;
         
         if (percent > 0) {
             momValue.innerText = `⬆️ ${Math.abs(percent).toFixed(1)}%`;
@@ -90,6 +87,165 @@ function updateMoMInsights(billsArray) {
             momText.className = "stat-trend neutral";
         }
     }
+}
+
+// --- SHARED ANALYTICS HELPERS ---
+function calculateAverages(bills) {
+    if(!bills || bills.length === 0) return { avgUnits: 0, avgCost: 0 };
+    let totalUnits = 0, totalCost = 0;
+    bills.forEach(b => { totalUnits += b.units; totalCost += b.cost; });
+    return {
+        avgUnits: Math.round(totalUnits / bills.length),
+        avgCost: Math.round(totalCost / bills.length)
+    };
+}
+
+function calculateTotals(bills) {
+    if(!bills || bills.length === 0) return { totalUnits: 0, totalCost: 0 };
+    let totalUnits = 0, totalCost = 0;
+    bills.forEach(b => { totalUnits += b.units; totalCost += b.cost; });
+    return { totalUnits, totalCost };
+}
+
+function getMaxUsage(bills) {
+    if(!bills || bills.length === 0) return null;
+    return bills.reduce((max, b) => (b.units > max.units ? b : max), bills[0]);
+}
+
+function getMinUsage(bills) {
+    if(!bills || bills.length === 0) return null;
+    return bills.reduce((min, b) => (b.units < min.units ? b : min), bills[0]);
+}
+
+function countPenaltyHits(bills) {
+    if(!bills) return 0;
+    return bills.filter(b => b.units > 500).length;
+}
+
+function calculateTrend(bills) {
+    if(!bills || bills.length < 2) return { indicator: "➖", text: "Stable", changePct: 0 };
+    
+    const cyclesToCompare = Math.min(bills.length, 4); 
+    let totalChangePct = 0;
+    let comparisons = 0;
+    
+    for(let i = 0; i < cyclesToCompare - 1; i++) {
+        const current = bills[i].units;
+        const previous = bills[i+1].units;
+        if(previous !== 0) {
+            totalChangePct += ((current - previous) / previous) * 100;
+            comparisons++;
+        }
+    }
+    
+    const change = comparisons > 0 ? totalChangePct / comparisons : 0;
+    if(change > 5) return { indicator: "📈", text: "Increasing", changePct: change };
+    if(change < -5) return { indicator: "📉", text: "Decreasing", changePct: change };
+    return { indicator: "➖", text: "Stable", changePct: change };
+}
+
+function calculateMoMCost(bills) {
+    if (!bills || bills.length < 2) return null;
+    if (bills[1].cost === 0) return null;
+    return ((bills[0].cost - bills[1].cost) / bills[1].cost) * 100;
+}
+
+function generateInsights(bills) {
+    const list = document.getElementById('analyticsInsightsList');
+    if(!list) return;
+    list.innerHTML = "";
+    
+    if(!bills || bills.length === 0) {
+        list.innerHTML = `<span style="color: #999;">Log some bills to generate insights.</span>`;
+        return;
+    }
+
+    const max = getMaxUsage(bills);
+    const min = getMinUsage(bills);
+    const penalty = countPenaltyHits(bills);
+    const trend = calculateTrend(bills);
+
+    let html = "";
+    if(max) html += `<div class="insight-item">🔥 <span>Your highest usage was in <strong>${max.month}</strong> (${max.units} units).</span></div>`;
+    if(min) html += `<div class="insight-item">❄️ <span>Your lowest usage was in <strong>${min.month}</strong> (${min.units} units).</span></div>`;
+    if(penalty > 0) html += `<div class="insight-item" style="border-left: 3px solid var(--color-penalty);">⚠️ <span>You crossed the penalty slab <strong>${penalty} times</strong>.</span></div>`;
+    if(trend.changePct < -5) html += `<div class="insight-item" style="border-left: 3px solid var(--color-safe);">📉 <span>Your usage decreased by <strong>${Math.abs(trend.changePct).toFixed(1)}%</strong> last cycle. Great job!</span></div>`;
+    else if(trend.changePct > 5) html += `<div class="insight-item" style="border-left: 3px solid var(--color-warning);">📈 <span>Your usage increased by <strong>${Math.abs(trend.changePct).toFixed(1)}%</strong> last cycle.</span></div>`;
+
+    list.innerHTML = html;
+}
+
+function initAnalyticsPage(bills) {
+    if(!bills || bills.length === 0) return;
+
+    const avg = calculateAverages(bills);
+    const totals = calculateTotals(bills);
+    const max = getMaxUsage(bills);
+    const min = getMinUsage(bills);
+    const trend = calculateTrend(bills);
+    const penalties = countPenaltyHits(bills);
+
+    document.getElementById('analyticsAvgUnits').textContent = `${avg.avgUnits} kWh`;
+    document.getElementById('analyticsAvgCost').textContent = `₹ ${avg.avgCost}`;
+    document.getElementById('analyticsPeakUsage').textContent = max ? `${max.month} (${max.units})` : "-";
+    document.getElementById('analyticsFloorUsage').textContent = min ? `${min.month} (${min.units})` : "-";
+    
+    document.getElementById('analyticsTotalUnits').textContent = `${totals.totalUnits} kWh`;
+    document.getElementById('analyticsTotalSpent').textContent = `₹ ${totals.totalCost}`;
+    document.getElementById('analyticsAvgChange').textContent = `${trend.changePct > 0 ? '+' : ''}${trend.changePct.toFixed(1)}%`;
+    document.getElementById('analyticsPenaltyHits').textContent = penalties;
+    document.getElementById('analyticsTrendVal').textContent = `${trend.indicator} ${trend.text}`;
+
+    generateInsights(bills);
+
+    const ctx = document.getElementById('analyticsDualChart');
+    if(!ctx) return;
+
+    const revBills = [...bills].reverse();
+    const lbls = revBills.map(b => b.month);
+    const unitsData = revBills.map(b => b.units);
+    const costData = revBills.map(b => b.cost);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: lbls,
+            datasets: [
+                {
+                    label: 'Units (kWh)',
+                    data: unitsData,
+                    type: 'line',
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y',
+                    tension: 0.3,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Cost (₹)',
+                    data: costData,
+                    type: 'bar',
+                    backgroundColor: 'rgba(88, 166, 255, 0.4)',
+                    borderColor: '#58a6ff',
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)' } },
+                y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+            },
+            plugins: {
+                tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
+                legend: { display: true, labels: { color: '#8b949e' } }
+            }
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -207,9 +363,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     
 
     // If they are trying to view the private pages without a VIP pass, kick them out
-    if (isDashboard && !currentUserId) {
+    const isProtectedPage = window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('appliances.html') || window.location.pathname.includes('analytics.html') || window.location.pathname.includes('bills.html');
+    if (isProtectedPage && !currentUserId) {
         window.location.href = 'login.html';
         return; // Stop running the rest of the script
+    }
+
+    // --- ANALYTICS HYDRATION LOGIC ---
+    if (window.location.pathname.includes('analytics.html')) {
+        try {
+            const response = await fetch('/api/bills/' + currentUserId);
+            const billsData = await response.json();
+            initAnalyticsPage(billsData);
+        } catch (error) {
+            console.error("Error loading analytics data:", error);
+        }
     }
 
     // Handle the Logout button

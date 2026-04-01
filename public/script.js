@@ -225,8 +225,8 @@ function initAnalyticsPage(bills) {
                     label: 'Cost (₹)',
                     data: costData,
                     type: 'bar',
-                    backgroundColor: 'rgba(88, 166, 255, 0.4)',
-                    borderColor: '#58a6ff',
+                    backgroundColor: 'rgba(0, 240, 255, 0.2)',
+                    borderColor: '#00F0FF',
                     borderWidth: 1,
                     yAxisID: 'y1'
                 }
@@ -417,8 +417,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                     datasets: [{
                         label: 'Bi-monthly Cost (₹)',
                         data: costArray,
-                        backgroundColor: 'rgba(88, 166, 255, 0.1)',
-                        borderColor: '#58a6ff',
+                        backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                        borderColor: '#00F0FF',
                         borderWidth: 2,
                         tension: 0.3,
                         fill: true

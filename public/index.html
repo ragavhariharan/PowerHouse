@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PowerHouse | Save Energy, Save Money</title>
+    <title>PowerHouse | Advanced Energy Analytics</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<!-- Ambient Glowing Matrices -->
+<div class="ambient-bg ambient-landing"></div>
+
 <nav class="navbar" style="justify-content: center;">
     <a href="index.html" class="logo" style="text-decoration: none;">
         <span class="text-green">Power</span>House
@@ -17,27 +21,31 @@
 <div id="home-view">
     <header class="hero">
         <div class="hero-content">
-            <h1>Stop Guessing. Start Saving.</h1>
-            <p>Log your electricity bill and let PowerHouse find the savings for you.</p>
-            <a href="login.html" class="cta-button" style="text-decoration: none; display: inline-block;">Get Started</a>
+            <h1>Take Control of Your Electricity Usage ⚡</h1>
+            <p>Track. Analyze. Optimize.</p>
+            <div class="hero-buttons">
+                <a href="login.html" class="btn-primary hero-glow-btn">Get Started</a>
+                <a href="login.html" class="btn-primary btn-secondary">Login</a>
+            </div>
         </div>
     </header>
 
-    <section class="how-it-works" id="how-it-works">
-        <h2>How PowerHouse Saves You Money</h2>
-        <div class="steps-container">
-            <div class="step-card">
-                <h3>1. Track & Visualize</h3>
-                <p>Log your previous and current meter readings. We plot your consumption history on an interactive chart so you can easily spot usage spikes over time.</p>
-            </div>
-            <div class="step-card">
-                <h3>2. The Appliance "What-If"</h3>
-                <p>Thinking about buying a new AC or running the heater longer? Add virtual appliances to your dashboard to see exactly how much they will add to your upcoming bill.</p>
-            </div>
-            <div class="step-card">
-                <h3>3. The 500-Unit Alert</h3>
-                <p>TNEB tariffs jump significantly after 500 units. PowerHouse actively monitors your simulated usage and warns you before your appliances push you into the high-cost slab.</p>
-            </div>
+    <section class="feature-grid" id="how-it-works">
+        <div class="feature-card">
+            <h3>📈 Dynamic Analytics</h3>
+            <p>Track your consumption trajectory with dual-axis interactive charts to identify underlying utility waste patterns over multiple billing cycles.</p>
+        </div>
+        <div class="feature-card">
+            <h3>💰 Budget Enforcement</h3>
+            <p>Set bi-monthly fiscal targets and let the PowerHouse algorithm issue localized alerts before you breach critical consumption ceilings.</p>
+        </div>
+        <div class="feature-card">
+            <h3>⚡ Appliance Simulator</h3>
+            <p>Test "What-if" scenarios. Predict exactly how acquiring that new 2-Ton AC will inflate your upcoming TNEB electrical bill before you buy it.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🤖 Smart Insights</h3>
+            <p>Automatically extract behavioral diagnostics from your metadata stream. View MoM change vectors and penalty-slab threshold tracking natively.</p>
         </div>
     </section>
 </div>

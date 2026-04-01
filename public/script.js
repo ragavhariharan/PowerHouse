@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const billsData = await response.json();
 
             if (billsData.length === 0) {
-                billsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #999;">No bills logged yet. Head to the Dashboard to add one.</td></tr>`;
+                billsTableBody.innerHTML = `<tr><td colspan="5" class="empty-state">No bills logged yet. Head to the Dashboard to add one.</td></tr>`;
             } else {
                 // Newest bills first
                 billsData.reverse().forEach(bill => {

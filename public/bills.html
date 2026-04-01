@@ -5,19 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bills - PowerHouse</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="dashboard-body">
-    <div class="ambient-bg"></div>
 
     <nav class="sidebar">
-        <div class="sidebar-brand"><a href="dashboard.html" style="text-decoration: none; color: inherit;"><span class="text-green">Power</span>House</a></div>
+        <div class="sidebar-brand"><a href="dashboard.html" style="text-decoration: none; color: inherit;">PowerHouse.</a></div>
         <ul class="sidebar-links">
             <li><a href="dashboard.html">Dashboard</a></li>
             <li><a href="bills.html" class="active">My Bills</a></li>
             <li><a href="appliances.html">Appliances</a></li>
             <li><a href="analytics.html">Analytics</a></li>
-            
         </ul>
         <div class="sidebar-footer">
             <a href="#" id="logoutBtn">Logout</a>
@@ -25,27 +23,28 @@
     </nav>
 
     <main class="main-content">
-        <header class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <header class="dashboard-header">
             <div>
                 <h2>Bill Ledger</h2>
-                <p style="color: #666; margin-top: 5px;">A complete history of your logged consumption.</p>
+                <p style="margin-top: 4px; font-size: 0.95rem;">A complete history of your logged consumption.</p>
             </div>
-            <button id="exportCsvBtn" class="btn-primary" style="padding: 10px 20px;">Download CSV</button>
+            <button id="exportCsvBtn" class="btn-primary" style="padding: 10px 20px; height: fit-content; align-self: flex-end;">Download CSV</button>
         </header>
 
-        <div class="chart-container" style="height: auto; padding: 0;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead style="background-color: #f9f9f9; border-bottom: 2px solid #eee;">
+        <!-- Table inside card-style wrapper -->
+        <div style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <table>
+                <thead>
                     <tr>
-                        <th style="padding: 1.5rem;">Billing Month</th>
-                        <th style="padding: 1.5rem;">Units Consumed</th>
-                        <th style="padding: 1.5rem;">Total Cost</th>
-                        <th style="padding: 1.5rem;">TNEB Status</th>
-                        <th style="padding: 1.5rem;">Action</th>
+                        <th>Billing Month</th>
+                        <th>Units Consumed</th>
+                        <th>Total Cost</th>
+                        <th>TNEB Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="billsTableBody">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </main>

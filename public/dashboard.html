@@ -5,16 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - PowerHouse</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dashboard-body">
-    <div class="ambient-bg"></div>
 
     <nav class="sidebar">
-        <div class="sidebar-brand"><span class="text-green">Power</span>House</div>
+        <div class="sidebar-brand">PowerHouse.</div>
         <ul class="sidebar-links">
-            <li><a href="#" class="active">Dashboard</a></li>
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
             <li><a href="bills.html">My Bills</a></li>
             <li><a href="appliances.html">Appliances</a></li>
             <li><a href="analytics.html">Analytics</a></li>
@@ -25,91 +24,117 @@
     </nav>
 
     <main class="main-content">
+
+        <!-- Page Header: title left, action right -->
         <header class="dashboard-header">
             <div>
                 <h2>Overview</h2>
-                <button class="btn-primary" style="margin-top: 15px;">+ Add New Bill</button>
+                <p style="margin-top: 4px; font-size: 0.95rem;">Your latest energy snapshot.</p>
             </div>
-            
-            <!-- Compact Slab Predictor Widget -->
-            <div class="predictor-widget">
-                <div class="predictor-label">Calculate Future Bill (What-If)</div>
-                <div class="predictor-input-group">
-                    <input type="number" id="targetUnits" placeholder="e.g. 480" class="predictor-input">
-                    <button id="predictBillBtn" class="btn-primary predictor-btn">Predict</button>
-                </div>
-                <div id="predictResultContainer" class="d-none"></div>
-            </div>
+            <button
+                class="btn-primary"
+                style="height: 44px; padding: 0 1.5rem; align-self: flex-end;"
+                onclick="document.getElementById('addBillModal').style.display='flex'"
+            >+ Add Bill</button>
         </header>
 
-        <div class="stats-grid">
+        <!-- Unified 5-card grid: 4 stat cards + predictor as first card -->
+        <div class="dashboard-grid">
+
+            <!-- Card 1: What-If Calculator -->
+            <div class="stat-card predictor-card">
+                <h3 class="stat-card-label">What-If Calculator</h3>
+                <div class="predictor-row">
+                    <input
+                        type="number"
+                        id="targetUnits"
+                        placeholder="Units (e.g. 480)"
+                        class="predictor-input-field"
+                    >
+                    <button id="predictBillBtn" class="btn-primary predictor-action-btn">Predict</button>
+                    <button id="resetPredictBtn" class="btn-primary btn-secondary predictor-action-btn">Reset</button>
+                </div>
+                <div id="predictResultContainer" class="d-none predict-result-inline"></div>
+            </div>
+
+            <!-- Card 2: Last Cycle Bill -->
             <div class="stat-card">
                 <h3>Last Cycle Bill</h3>
                 <p class="stat-number" id="displayCost">₹ 0</p>
                 <span class="stat-trend neutral" id="displayCycle">No bills logged yet</span>
             </div>
+
+            <!-- Card 3: Units Consumed -->
             <div class="stat-card">
                 <h3>Units Consumed</h3>
                 <p class="stat-number" id="displayUnits">0 kWh</p>
-                <span class="stat-trend neutral">Bi-monthly Total</span>
+                <span class="stat-trend neutral">Bi-monthly total</span>
             </div>
+
+            <!-- Card 4: TNEB Slab Status -->
             <div class="stat-card">
                 <h3>TNEB Slab Status</h3>
                 <p class="stat-number" id="displayStatus" style="font-size: 1.5rem;">Unknown</p>
                 <span class="stat-trend" id="displayStatusTrend">Log a bill to see status</span>
             </div>
+
+            <!-- Card 5: Month-over-Month -->
             <div class="stat-card">
-                <h3>Smart Insights (MoM)</h3>
-                <p class="stat-number" id="displayMomValue" style="font-size: 1.5rem;">-</p>
+                <h3>Month-over-Month</h3>
+                <p class="stat-number" id="displayMomValue" style="font-size: 1.5rem;">—</p>
                 <span class="stat-trend neutral" id="displayMomText">No comparison data yet</span>
             </div>
+
+            <!-- Card 6: Budget Tracker -->
             <div class="stat-card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-                    <h3 style="margin: 0; line-height: 1.2;">Budget Tracker</h3>
-                    <button id="editBudgetBtn" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); filter: grayscale(1); font-size: 0.9rem;" title="Edit Budget">✏️</button>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                    <h3 style="margin: 0;">Budget Tracker</h3>
+                    <button id="editBudgetBtn" style="background: none; border: none; cursor: pointer; color: var(--color-accent); font-size: 0.85rem; font-weight: 500; padding: 2px 0;" title="Edit Budget">Edit</button>
                 </div>
-                
                 <div id="budgetDisplayState">
-                    <p class="stat-number" id="budgetProgressText" style="font-size: 1.3rem; margin-top: 5px;">-</p>
-                    <div class="progress-bar-container" style="height: 6px; margin-top: 10px; margin-bottom: 5px;">
+                    <p class="stat-number" id="budgetProgressText" style="font-size: 1.3rem;">—</p>
+                    <div class="progress-bar-container">
                         <div id="budgetProgressBar" class="progress-bar"></div>
                     </div>
-                    <span class="stat-trend neutral" id="budgetStatusText">Set a budget</span>
+                    <span class="stat-trend neutral" id="budgetStatusText">Set a budget to track</span>
                 </div>
-                
                 <div id="budgetEditState" class="d-none" style="margin-top: 10px;">
-                    <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-                        <input type="number" id="budgetInput" placeholder="Max ₹" style="flex: 1; padding: 5px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); font-size: 0.9rem;">
-                        <button id="saveBudgetBtn" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; border-radius: 4px;">Save</button>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="budgetInput" placeholder="Max ₹" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                        <button id="saveBudgetBtn" class="btn-primary" style="padding: 8px 14px; font-size: 0.85rem; border-radius: 8px;">Save</button>
                     </div>
                 </div>
             </div>
+
         </div>
 
-
+        <!-- Consumption Chart -->
         <div class="chart-container">
             <h3>Consumption History</h3>
             <canvas id="usageChart"></canvas>
         </div>
-    </main>
-<div id="addBillModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <h2>Log TNEB Bill</h2>
-        <form id="addBillForm">
-            <div class="form-group">
-                <label>Billing Month</label>
-                <input type="month" id="billMonth" required> 
-            </div>
-            <div class="form-group">
-                <label>Units Consumed (from meter/bill)</label>
-                <input type="number" id="billUnits" placeholder="e.g. 320" required>
-            </div>
 
-            <button type="submit" class="btn-primary" style="width: 100%;">Save to Dashboard</button>
-        </form>
+    </main>
+
+    <!-- Add Bill Modal -->
+    <div id="addBillModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="document.getElementById('addBillModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 0.4rem;">Log Bill</h2>
+            <p style="margin-bottom: 2rem; font-size: 0.9rem;">Enter the details for this billing cycle.</p>
+            <form id="addBillForm">
+                <div class="form-group">
+                    <label>Billing Month</label>
+                    <input type="month" id="billMonth" required>
+                </div>
+                <div class="form-group">
+                    <label>Units Consumed</label>
+                    <input type="number" id="billUnits" placeholder="e.g. 320" required>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; border-radius: 12px;">Save to Dashboard</button>
+            </form>
+        </div>
     </div>
-</div>
 
     <script src="script.js"></script>
 </body>

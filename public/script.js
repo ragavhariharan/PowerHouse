@@ -215,7 +215,7 @@ function initAnalyticsPage(bills) {
                     label: 'Units (kWh)',
                     data: unitsData,
                     type: 'line',
-                    borderColor: '#2ecc71',
+                    borderColor: 'var(--color-safe)',
                     backgroundColor: 'transparent',
                     yAxisID: 'y',
                     tension: 0.3,
@@ -225,9 +225,10 @@ function initAnalyticsPage(bills) {
                     label: 'Cost (₹)',
                     data: costData,
                     type: 'bar',
-                    backgroundColor: 'rgba(0, 240, 255, 0.2)',
-                    borderColor: '#00F0FF',
+                    backgroundColor: 'rgba(0, 113, 227, 0.15)',
+                    borderColor: '#0071E3',
                     borderWidth: 1,
+                    borderRadius: 4,
                     yAxisID: 'y1'
                 }
             ]
@@ -237,12 +238,12 @@ function initAnalyticsPage(bills) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             scales: {
-                y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)' } },
-                y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+                y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#6E6E73' }, border: { display: false } },
+                y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#6E6E73' }, border: { display: false } }
             },
             plugins: {
-                tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
-                legend: { display: true, labels: { color: '#8b949e' } }
+                tooltip: { backgroundColor: '#1D1D1F', titleColor: '#F4F6F8', bodyColor: '#A1A1A6', padding: 12, cornerRadius: 10 },
+                legend: { display: true, labels: { color: '#6E6E73', font: { size: 13 } } }
             }
         }
     });
@@ -288,19 +289,20 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (billsData.length === 0) {
                 billsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #999;">No bills logged yet. Head to the Dashboard to add one.</td></tr>`;
             } else {
-                // Reverse the array so the newest bills are at the top
+                // Newest bills first
                 billsData.reverse().forEach(bill => {
-                    const statusText = bill.units > 500 ? '<span style="color: #e74c3c; font-weight: 600;">Penalty Slab</span>' : '<span style="color: #2ecc71; font-weight: 600;">Safe Slab</span>';
-                    
+                    const isOver = bill.units > 500;
+                    const statusText = isOver
+                        ? `<span style="color: var(--color-penalty); font-weight: 600;">Penalty Slab</span>`
+                        : `<span style="color: var(--color-safe); font-weight: 600;">Safe Slab</span>`;
                     const row = document.createElement('tr');
-                    row.style.borderBottom = "1px solid #eee";
                     row.innerHTML = `
-                        <td style="padding: 1.5rem;">${bill.month}</td>
-                        <td style="padding: 1.5rem;">${bill.units} kWh</td>
-                        <td style="padding: 1.5rem;">₹${bill.cost}</td>
-                        <td style="padding: 1.5rem;">${statusText}</td>
-                        <td style="padding: 1.5rem;">
-                            <button class="delete-bill-btn" data-id="${bill._id}" style="color: #e74c3c; background: none; border: none; cursor: pointer; font-weight: 600;">Delete</button>
+                        <td>${bill.month}</td>
+                        <td>${bill.units} kWh</td>
+                        <td>₹${bill.cost}</td>
+                        <td>${statusText}</td>
+                        <td>
+                            <button class="delete-bill-btn" data-id="${bill._id}" style="color: var(--color-penalty); background: none; border: none; cursor: pointer; font-weight: 500; font-size: 0.9rem;">Delete</button>
                         </td>
                     `;
                     billsTableBody.appendChild(row);
@@ -417,11 +419,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                     datasets: [{
                         label: 'Bi-monthly Cost (₹)',
                         data: costArray,
-                        backgroundColor: 'rgba(0, 240, 255, 0.1)',
-                        borderColor: '#00F0FF',
+                        backgroundColor: 'rgba(0, 113, 227, 0.08)',
+                        borderColor: '#0071E3',
                         borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#0071E3',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 };
 
@@ -435,12 +440,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                         scales: {
                             y: { 
                                 beginAtZero: true, 
-                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                                ticks: { color: '#8b949e' }
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                                ticks: { color: '#6E6E73', font: { size: 12 } },
+                                border: { display: false }
                             },
                             x: { 
-                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                                ticks: { color: '#8b949e' }
+                                grid: { display: false },
+                                ticks: { color: '#6E6E73', font: { size: 12 } },
+                                border: { display: false }
                             }
                         }
                     }
@@ -459,12 +466,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 
                 if (latestBill.units <= 500) {
                     statusCard.innerText = "Safe Slab";
-                    statusCard.style.color = "#2ecc71"; // Green
+                    statusCard.style.color = "var(--color-safe)";
                     statusTrend.innerText = `${500 - latestBill.units} units left before penalty`;
                     statusTrend.className = "stat-trend positive";
                 } else {
                     statusCard.innerText = "Penalty Slab";
-                    statusCard.style.color = "#e74c3c"; // Red
+                    statusCard.style.color = "var(--color-penalty)";
                     statusTrend.innerText = `Exceeded 500 units by ${latestBill.units - 500}`;
                     statusTrend.className = "stat-trend negative";
                 }
@@ -477,13 +484,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // --- MODAL LOGIC (Unchanged) ---
+    // --- MODAL LOGIC ---
     const modal = document.getElementById("addBillModal");
-    const btn = document.querySelector(".dashboard-header .btn-primary");
     const closeSpan = document.getElementsByClassName("close-btn")[0];
     const addBillForm = document.getElementById("addBillForm");
 
-    if(btn) btn.onclick = () => modal.style.display = "flex";
     if(closeSpan) closeSpan.onclick = () => modal.style.display = "none";
     window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; }
 
@@ -523,13 +528,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (usageChart) {
                     usageChart.data.labels = freshBills.map(b => b.month).reverse();
                     usageChart.data.datasets[0].data = freshBills.map(b => b.cost).reverse();
-                    
                     usageChart.data.datasets[0].label = 'Bi-monthly Cost (₹)';
-                    usageChart.data.datasets[0].backgroundColor = 'rgba(88, 166, 255, 0.1)';
-                    usageChart.data.datasets[0].borderColor = '#58a6ff';
+                    usageChart.data.datasets[0].backgroundColor = 'rgba(0, 113, 227, 0.08)';
+                    usageChart.data.datasets[0].borderColor = '#0071E3';
                     usageChart.data.datasets[0].borderWidth = 2;
                     usageChart.data.datasets[0].fill = true;
-                    
                     usageChart.update();
                 }
 
@@ -544,12 +547,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const statusTrend = document.getElementById('displayStatusTrend');
                 if (latestBill.units <= 500) {
                     statusCard.innerText = "Safe Slab";
-                    statusCard.style.color = "#2ecc71";
+                    statusCard.style.color = "var(--color-safe)";
                     statusTrend.innerText = `${500 - newBillData.units} units left before penalty`;
                     statusTrend.className = "stat-trend positive";
                 } else {
                     statusCard.innerText = "Penalty Slab";
-                    statusCard.style.color = "#e74c3c";
+                    statusCard.style.color = "var(--color-penalty)";
                     statusTrend.innerText = `Exceeded 500 units by ${newBillData.units - 500}`;
                     statusTrend.className = "stat-trend negative";
                 }
@@ -571,19 +574,43 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- SERVER-SIDE SLAB PREDICTOR (WHAT-IF) LOGIC ---
     const targetUnitsInput = document.getElementById('targetUnits');
     const predictBillBtn = document.getElementById('predictBillBtn');
+    const resetPredictBtn = document.getElementById('resetPredictBtn');
     const predictResultContainer = document.getElementById('predictResultContainer');
+
+    function clearPredictResult() {
+        if (predictResultContainer) {
+            predictResultContainer.innerHTML = '';
+            predictResultContainer.className = 'd-none predict-result-inline';
+        }
+    }
+
+    // Clear stale result whenever the user changes the input value
+    if (targetUnitsInput) {
+        targetUnitsInput.addEventListener('input', () => {
+            clearPredictResult();
+        });
+    }
+
+    // Reset button: clears input + result
+    if (resetPredictBtn) {
+        resetPredictBtn.addEventListener('click', () => {
+            if (targetUnitsInput) targetUnitsInput.value = '';
+            clearPredictResult();
+        });
+    }
 
     if (predictBillBtn) {
         predictBillBtn.addEventListener('click', async () => {
-            const expectedUnits = parseFloat(targetUnitsInput.value);
+            const val = targetUnitsInput ? targetUnitsInput.value.trim() : '';
 
-            if (isNaN(expectedUnits) || expectedUnits < 0) {
-                alert("Please enter a valid positive number for units.");
+            if (val === '' || isNaN(parseFloat(val)) || parseFloat(val) < 0) {
+                clearPredictResult();
                 return;
             }
 
+            const expectedUnits = parseFloat(val);
+
             try {
-                // Send calculation request to the new Backend Endpoint
                 const response = await fetch('/api/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -593,26 +620,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (!response.ok) throw new Error("Prediction request failed");
 
                 const result = await response.json();
-                
-                predictResultContainer.classList.remove('d-none');
-                
                 const isSafe = result.status === "Safe Slab";
-                const color = isSafe ? "#2ecc71" : "#e74c3c";
-                const icon = isSafe ? "✅" : "⚠️";
-                const message = isSafe 
-                    ? `You are under the 500 unit limit. You have <b>${result.difference.toFixed(0)}</b> buffer units left.`
-                    : `You have triggered the Penalty Rates! You are <b>${result.difference.toFixed(0)}</b> units over the limit.`;
+                const statusColor = isSafe ? 'var(--color-safe)' : 'var(--color-penalty)';
+                const bufferText = isSafe
+                    ? `<strong>${result.difference.toFixed(0)}</strong> buffer units remaining`
+                    : `<strong>${result.difference.toFixed(0)}</strong> units over the penalty limit`;
 
-                const cssColor = isSafe ? "var(--color-safe)" : "var(--color-penalty)";
-                predictResultContainer.className = "predictor-result-box";
+                predictResultContainer.className = `predict-result-inline${isSafe ? '' : ' is-penalty'}`;
                 predictResultContainer.innerHTML = `
-                    <h4 style="color: ${cssColor}">${icon} ${result.status}</h4>
-                    <p>Cost: <b>₹${result.cost.toFixed(2)}</b></p>
-                    <p class="msg">${message}</p>
+                    <span style="font-weight: 600; color: ${statusColor};">${result.status}</span>
+                    &nbsp;·&nbsp; ₹<strong>${result.cost.toFixed(2)}</strong>
+                    <span style="display: block; margin-top: 4px; color: var(--text-secondary); font-size: 0.85rem;">${bufferText}</span>
                 `;
             } catch (error) {
                 console.error("Prediction Error:", error);
-                alert("Failed to calculate prediction over the server.");
             }
         });
     }
@@ -671,11 +692,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         if (grandTotalUnits > 500) {
             tierWarning.innerText = "⚠️ DANGER: Pushed into High Slab (>500 Units)";
-            tierWarning.style.color = "#e74c3c";
-            projectedBill.style.color = "#e74c3c";
+            tierWarning.style.color = "var(--color-penalty)";
+            projectedBill.style.color = "var(--color-penalty)";
         } else {
             tierWarning.innerText = "Safe: Below 500 Unit Slab";
-            tierWarning.style.color = "#2ecc71";
+            tierWarning.style.color = "var(--color-safe)";
             projectedBill.style.color = "#333";
         }
     }
@@ -703,7 +724,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             newRow.innerHTML = `
                 <td style="padding: 1rem; font-weight: 600;">${name}</td>
                 <td style="padding: 1rem;">+${units60Days.toFixed(0)} Units</td>
-                <td style="padding: 1rem;"><button class="remove-btn" data-id="${id}" style="color: #e74c3c; background: none; border: none; cursor: pointer;">Remove</button></td>
+                <td style="padding: 1rem;"><button class="remove-btn" data-id="${id}" style="color: var(--color-penalty); background: none; border: none; cursor: pointer;">Remove</button></td>
             `;
 
             newRow.querySelector('.remove-btn').onclick = function() {

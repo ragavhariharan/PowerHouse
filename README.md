@@ -134,12 +134,3 @@ PowerHouse automatically calculates your bill using official TNEB bi-monthly sla
 
 ---
 
-## 👥 Team
-
-Built as a Web Programming course project (Semester 4).
-
----
-
-## 📄 License
-
-ISC
